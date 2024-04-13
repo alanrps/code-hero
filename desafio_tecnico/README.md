@@ -1,4 +1,4 @@
-# desafio_tecnico
+# Code Hero
 
 A new Flutter project.
 

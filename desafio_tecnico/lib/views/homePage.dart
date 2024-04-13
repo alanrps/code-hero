@@ -1,8 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:code_hero/models/Character.dart';
+import 'package:code_hero/services/marvel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:hexcolor/hexcolor.dart';
 
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:convert';
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title});
+  // const HomePage({super.key });
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -13,13 +22,16 @@ class HomePage extends StatefulWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  final String title;
+  // final String title;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  Services services = Services();
+  // List<Widget> _characters = [];
+  List<Character> characters = [];
   int _counter = 0;
 
   void _incrementCounter() {
@@ -33,63 +45,282 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<Map<String, dynamic>> carregarArquivoJson() async {
+    // Carrega o arquivo JSON do diretório de ativos
+    String jsonString = await rootBundle.loadString('data.json');
+
+    // Converte a string JSON em um mapa ou lista, dependendo do formato do JSON
+    var data = jsonDecode(jsonString) as Map<String, dynamic>;
+
+    // Use os dados carregados conforme necessário
+    return data;
+  }
+
+  processCharacters() async {
+    // {String name = ''} name: name
+    // final charactersResponse = await services.getCharacters();
+
+    // final jsonData = jsonDecode(charactersResponse.body);
+    // print('JSON DECODE: $jsonData');
+
+    // setState(() {
+    //   characters = (jsonData['data']['results'] as List)
+    //       .map((character) => Character.fromJson(character))
+    //       .toList();
+    // });
+
+    Map<String, dynamic> jsonData = await carregarArquivoJson();
+
+    setState(() {
+      characters = (jsonData['data']['results'] as List)
+        .map((character) => Character.fromJson(character))
+        .toList();
+    });
+
+    return characters;
+  }
+
+  getListData(List<Character> characters) {
+    List<Widget> widgets = [];
+
+    for (final character in characters) {
+      widgets.add(ListView.builder(itemBuilder: (context, index) {
+        return ListTile(
+            leading: CircleAvatar(
+              backgroundImage: NetworkImage(character.thumbnailUrl),
+              // child: Text(character.name),
+            ),
+            title: Text(character.name));
+      }));
+    }
+
+    print(widgets);
+    // setState(() {
+    //   _characters = widgets;
+    // });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    processCharacters();
+  // .then((characters) => getListData(characters));
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    TextEditingController _textController = TextEditingController();
+    List<String> _items =
+        List.generate(20, (index) => 'Super Herói ${index + 1}');
+    int _currentPage = 1;
+    int _totalPages = 5;
+    int _itemsPerPage = 4;
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the HomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(
-          widget.title,
-          style: TextStyle(fontSize: 12, color: HexColor('#D42026')),
-        ),
-      ),
-      body: Row(
-        children: [
-          Form(
-            child: TextFormField(
-                decoration: const InputDecoration(
-                  hintText: 'Enter your email',
+          backgroundColor: Colors.white,
+          title: RichText(
+            text: TextSpan(
+              children: [
+                WidgetSpan(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom:
+                              BorderSide(width: 0.8, color: HexColor('#D42026'))),
+                    ),
+                    child: Text('BUSCA',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: HexColor('#D42026'))),
+                  ),
                 ),
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter some text';
-                  }
-                  return null;
-                },
+                TextSpan(
+                  text: ' MARVEL ',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: HexColor('#D42026')),
+                ),
+                TextSpan(
+                  text: 'TESTE FRONT-END',
+                  style: TextStyle(fontSize: 12, color: HexColor('#D42026')),
+                ),
+              ],
+            ),
+          )),
+      body: Column(
+        children: [
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(8, 12, 8, 0),
+              child: Text(
+                'Nome do Personagem',
+                textAlign: TextAlign.start,
+                style:
+                    TextStyle(color: HexColor('#D42026'), fontFamily: 'Roboto'),
               ),
-          ),
-          ListView(children: <Widget>[
-            ListTile(
-              leading: Icon(Icons.map),
-              title: Text('Mapa'),
             ),
-            ListTile(
-              leading: Icon(Icons.photo_album),
-              title: Text('Álbum'),
-            ),
-            ListTile(
-              leading: Icon(Icons.phone),
-              title: Text('Fone'),
+            Padding(
+              padding: EdgeInsets.fromLTRB(8, 0, 8, 12),
+              child: TextField(
+                controller: _textController,
+                decoration: InputDecoration(
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
+                  border: OutlineInputBorder(),
+                ),
+              ),
             ),
           ]),
+           Container(
+            width: double.infinity,
+            height: 35,
+            color: HexColor('#D42026'),
+            alignment: Alignment.center, 
+            padding: EdgeInsets.only(right: 180), 
+             child: Text(
+              'Nome',
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: 'Roboto',
+                color: Colors.white
+              ),
+                       ),
+           ),
+          Expanded(
+            child: ListView.separated(
+              separatorBuilder: (context, index) => Divider(
+              color: HexColor('#D42026'), // cor da divisão
+              thickness: 1, // espessura da divisão
+              height: 1, // altura da divisão
+            ),
+            itemCount: characters.length,
+            itemBuilder: (context, index) {
+              Character character = characters[index];
+
+                return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(character.thumbnailUrl),
+                ),
+                title: Text(character.name),
+              );
+            },
+          ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: _currentPage > 1
+                    ? () {
+                        setState(() {
+                          _currentPage--;
+                        });
+                      }
+                    : null,
+                icon: Icon(Icons.arrow_left,
+                    size: 80, color: HexColor('#D42026')),
+              ),
+              // Text('$_currentPage de $_totalPages'),
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                    child: GestureDetector(
+                      // onTap: onPressed,
+                      child: Container(
+                        width: 35, // Largura do círculo
+                        height: 50, // Altura do círculo
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle, // Define a forma como círculo
+                          border: Border.all(
+                            color: HexColor('#D42026'),
+                            width: 1,
+                          ),
+                        ),
+                        padding: EdgeInsets.all(5),
+                        child: Center(
+                          child: Text(
+                            '1',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: HexColor('#D42026')),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                    child: GestureDetector(
+                      // onTap: onPressed,
+                      child: Container(
+                        width: 35, // Largura do círculo
+                        height: 50, // Altura do círculo
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle, // Define a forma como círculo
+                          border: Border.all(
+                            color: HexColor('#D42026'),
+                            width: 1,
+                          ),
+                        ),
+                        padding: EdgeInsets.all(5),
+                        child: Center(
+                          child: Text(
+                            '2',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: HexColor('#D42026')),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    // onTap: onPressed,
+                    child: Container(
+                      width: 35, // Largura do círculo
+                      height: 50, // Altura do círculo
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle, // Define a forma como círculo
+                        border: Border.all(
+                          color: HexColor('#D42026'),
+                          width: 1,
+                        ),
+                      ),
+                      padding: EdgeInsets.all(5),
+                      child: Center(
+                        child: Text(
+                          '3',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: HexColor('#D42026')),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                onPressed: _currentPage < _totalPages
+                    ? () {
+                        setState(() {
+                          _currentPage++;
+                        });
+                      }
+                    : null,
+                icon: Icon(Icons.arrow_right,
+                    size: 80, color: HexColor('#D42026')),
+              ),
+            ],
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
