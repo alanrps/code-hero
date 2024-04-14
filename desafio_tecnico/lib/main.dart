@@ -1,6 +1,8 @@
+import 'package:code_hero/views/details.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'views/homePage.dart';
+import 'package:hexcolor/hexcolor.dart';
 
 void main() async {
     await dotenv.load(fileName: ".env");
@@ -33,10 +35,16 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: HexColor('#D42026')),
         useMaterial3: true,
       ),
-      home: HomePage(),
+      initialRoute: '/',
+      // Mapeamento das rotas
+      routes: {
+        '/': (context) => HomePage(), // Rota para a primeira tela
+        '/details': (context) => Details(), // Rota para a segunda tela
+      },
+      // home: HomePage(),
     );
   }
 }

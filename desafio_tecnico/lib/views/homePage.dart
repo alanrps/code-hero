@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:code_hero/models/Character.dart';
 import 'package:code_hero/services/marvel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -28,10 +29,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String characterName = '';
   List<int> indexPages = [1, 2, 3];
   int currentPage = 1;
   int totalPages = 3;
   int itemsPerPage = 4;
+  int totalCharacters = 0;
+  int totalItensPages = 0;
+  
   Services services = Services();
   // List<Widget> _characters = [];
   List<Character> characters = [];
@@ -47,14 +52,21 @@ class _HomePageState extends State<HomePage> {
     return data;
   }
 
-  processCharacters({String name = ''}) async {
+  processCharacters() async {
     final offset = (currentPage - 1) * 4;
-    final charactersResponse = await services.getCharacters(name: name, offset: offset);
+    final charactersResponse = await services.getCharacters(name: characterName, offset: offset);
 
-    setState(() {
-      characters = (charactersResponse['data']['results'] as List)
+    totalCharacters = charactersResponse['data']['total'];
+    print(totalCharacters);
+    totalItensPages = (totalCharacters / 4).ceil();
+    print(totalItensPages);
+
+    List<Character> charactersResult = (charactersResponse['data']['results'] as List)
           .map((character) => Character.fromJson(character))
           .toList();
+
+    setState(() {
+      characters = charactersResult;
     });
 
     // ARQUIVO
@@ -91,10 +103,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   handleTextChanged(String character) async {
-    await processCharacters(name: character);
+    // Voltar para 1, resetar os campos e setar o valor total
+    setPage(1);
+    int index = 0;
+    totalPages = 3;
+
+    for (int i = 1; i <= totalPages; i++) {
+      indexPages[index] = i;
+      index++;
+    }
+
+    setCharacterName(character);
+    await processCharacters();
   }
 
-  setPage(int page){
+  setPage(int page) {
     setState(() {
       currentPage = page;
     });
@@ -102,137 +125,167 @@ class _HomePageState extends State<HomePage> {
     print(currentPage);
   }
 
+  setCharacterName(String name) {
+    setState(() {
+      characterName = name;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     processCharacters();
-  // .then((characters) => getListData(characters));
+    // .then((characters) => getListData(characters));
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: RichText(
-            text: TextSpan(
-              children: [
-                WidgetSpan(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                          bottom:
-                              BorderSide(width: 0.8, color: HexColor('#D42026'))),
-                    ),
-                    child: Text('BUSCA',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: HexColor('#D42026'))),
+        backgroundColor: Colors.white,
+        title: Padding(
+          padding: EdgeInsets.fromLTRB(20, 12, 0, 0), 
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(width: 0.8, color: HexColor('#D42026')),
                   ),
                 ),
-                TextSpan(
-                  text: ' MARVEL ',
+                child: Text(
+                  'BUSCA',
                   style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: HexColor('#D42026')),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: HexColor('#D42026'),
+                  ),
                 ),
-                TextSpan(
-                  text: 'TESTE FRONT-END',
-                  style: TextStyle(fontSize: 16, color: HexColor('#D42026')),
+              ),
+              Text(
+                ' MARVEL ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: HexColor('#D42026'),
                 ),
-              ],
-            ),
-          )),
+              ),
+              Text(
+                'TESTE FRONT-END',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: HexColor('#D42026'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: Column(
         children: [
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(8, 12, 8, 0),
-              child: Text(
-                'Nome do Personagem',
-                textAlign: TextAlign.start,
-                style:
-                    TextStyle(color: HexColor('#D42026'), fontFamily: 'Roboto'),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(8, 0, 8, 12),
-              child: TextField(
-                onChanged: handleTextChanged,
-                // controller: _textController,
-                decoration: InputDecoration(
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
-                  border: OutlineInputBorder(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(25, 12, 25, 0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+                child: Text(
+                  'Nome do Personagem',
+                  textAlign: TextAlign.start,
+                  style:
+                      TextStyle(color: HexColor('#D42026'), fontFamily: 'Roboto'),
                 ),
               ),
-            ),
-          ]),
-           Container(
+              Padding(
+                padding: EdgeInsets.fromLTRB(8, 0, 8, 12),
+                child: SizedBox(
+                  height: 30.0,
+                  child: TextField(
+                    onChanged: handleTextChanged,
+                    // controller: _textController,
+                    decoration: InputDecoration(
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+          Container(
             width: double.infinity,
             height: 35,
             color: HexColor('#D42026'),
-            alignment: Alignment.center, 
-            padding: EdgeInsets.only(right: 180), 
-             child: Text(
+            alignment: Alignment.center,
+            padding: EdgeInsets.only(right: 180),
+            child: Text(
               'Nome',
               style: TextStyle(
-                fontSize: 12,
-                fontFamily: 'Roboto',
-                color: Colors.white
-              ),
-                       ),
-           ),
+                  fontSize: 12, fontFamily: 'Roboto', color: Colors.white),
+            ),
+          ),
           Expanded(
             child: ListView.separated(
+              // physics: NeverScrollableScrollPhysics(), 
               separatorBuilder: (context, index) => Divider(
-              color: HexColor('#D42026'), // cor da divisão
-              thickness: 1, // espessura da divisão
-              height: 1, // altura da divisão
-            ),
-            itemCount: characters.length,
-            itemBuilder: (context, index) {
-              Character character = characters[index];
-
+                color: HexColor('#D42026'), // cor da divisão
+                thickness: 1, // espessura da divisão
+                height: 0, // altura da divisão
+              ),
+              itemCount: characters.length,
+              itemBuilder: (context, index) {
+                Character character = characters[index];
+            
                 return ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                leading: CircleAvatar(
-                  backgroundImage: NetworkImage(character.thumbnailUrl),
-                ),
-                title: Text(character.name),
-              );
-            },
+                  onTap: () => {
+                    Navigator.pushNamed(context, '/details', arguments: character)
+                  },
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  leading: CircleAvatar(
+                    radius: 25,
+                    backgroundImage: NetworkImage(character.thumbnailUrl),
+                  ),
+                  title: Text(character.name),
+                );
+              },
+            ),
           ),
-          ),
+          Divider(
+                color: HexColor('#D42026'), // cor da divisão
+                thickness: 1, // espessura da divisão
+                height: 0, // altura da divisão
+              ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: currentPage > 1
                     ? () async {
-                        if(currentPage - 1 < indexPages[0]){
+                        if (currentPage - 1 < indexPages[0]) {
                           int index = 0;
-
-                          for(int i = indexPages[0] - 3; i <= totalPages - 3; i++){
+          
+                          for (int i = indexPages[0] - 3;
+                              i <= totalPages - 3;
+                              i++) {
                             indexPages[index] = i;
                             index++;
                           }
-
+          
                           totalPages = totalPages - 3;
                         }
-
+          
                         setState(() {
                           currentPage--;
                         });
-
+          
                         await processCharacters();
                       }
                     : null,
                 icon: Icon(Icons.arrow_left,
-                    size: 80, color: currentPage > 1 ? HexColor('#D42026') : Colors.grey),
+                    size: 65,
+                    color: currentPage > 1 ? HexColor('#D42026') : Colors.grey),
               ),
               // Text('$currentPage de $totalPages'),
               Row(
@@ -245,10 +298,12 @@ class _HomePageState extends State<HomePage> {
                         await processCharacters();
                       },
                       child: Container(
-                        width: 35, // Largura do círculo
-                        height: 50, // Altura do círculo
+                        width: 30, // Largura do círculo
+                        height: 40, // Altura do círculo
                         decoration: BoxDecoration(
-                          color: indexPages[0] == currentPage ? HexColor('#D42026') : Colors.white, 
+                          color: indexPages[0] == currentPage
+                              ? HexColor('#D42026')
+                              : Colors.white,
                           shape: BoxShape.circle, // Define a forma como círculo
                           border: Border.all(
                             color: HexColor('#D42026'),
@@ -260,26 +315,31 @@ class _HomePageState extends State<HomePage> {
                           child: Text(
                             indexPages[0].toString(),
                             style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: indexPages[0] == currentPage ? Colors.white : HexColor('#D42026')),
+                                color: indexPages[0] == currentPage
+                                    ? Colors.white
+                                    : HexColor('#D42026')),
                           ),
                         ),
                       ),
                     ),
                   ),
+                if (indexPages[1] <= totalItensPages) 
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
                     child: GestureDetector(
-                     onTap: () async {
-                      setPage(indexPages[1]);
-                      await processCharacters();
-                    },
+                      onTap: () async {
+                        setPage(indexPages[1]);
+                        await processCharacters();
+                      },
                       child: Container(
-                        width: 35, // Largura do círculo
-                        height: 50, // Altura do círculo
+                        width: 30, // Largura do círculo
+                        height: 40, // Altura do círculo
                         decoration: BoxDecoration(
-                          color: indexPages[1] == currentPage ? HexColor('#D42026') : Colors.white, 
+                          color: indexPages[1] == currentPage
+                              ? HexColor('#D42026')
+                              : Colors.white,
                           shape: BoxShape.circle, // Define a forma como círculo
                           border: Border.all(
                             color: HexColor('#D42026'),
@@ -291,24 +351,29 @@ class _HomePageState extends State<HomePage> {
                           child: Text(
                             indexPages[1].toString(),
                             style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: indexPages[1] == currentPage ? Colors.white : HexColor('#D42026')),
+                                color: indexPages[1] == currentPage
+                                    ? Colors.white
+                                    : HexColor('#D42026')),
                           ),
                         ),
                       ),
                     ),
                   ),
+                  if (indexPages[2] <= totalItensPages)
                   GestureDetector(
                     onTap: () async {
                       setPage(indexPages[2]);
                       await processCharacters();
-                    } ,
+                    },
                     child: Container(
-                      width: 35, // Largura do círculo
-                      height: 50, // Altura do círculo
+                      width: 30, // Largura do círculo
+                      height: 40, // Altura do círculo
                       decoration: BoxDecoration(
-                        color: indexPages[2] == currentPage ? HexColor('#D42026') : Colors.white, 
+                        color: indexPages[2] == currentPage
+                            ? HexColor('#D42026')
+                            : Colors.white,
                         shape: BoxShape.circle, // Define a forma como círculo
                         border: Border.all(
                           color: HexColor('#D42026'),
@@ -320,9 +385,11 @@ class _HomePageState extends State<HomePage> {
                         child: Text(
                           indexPages[2].toString(),
                           style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: indexPages[2] == currentPage ? Colors.white : HexColor('#D42026')),
+                              color: indexPages[2] == currentPage
+                                  ? Colors.white
+                                  : HexColor('#D42026')),
                         ),
                       ),
                     ),
@@ -330,29 +397,31 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               IconButton(
-                onPressed: currentPage <= totalPages
+                onPressed: currentPage <= totalPages && currentPage < totalItensPages
                     ? () async {
-                        if(currentPage + 1 > totalPages){
+                        if (currentPage + 1 > totalPages) {
                           int index = 0;
-
-                          for(int i = totalPages + 1; i <= totalPages + 3; i++){
+          
+                          for (int i = totalPages + 1;
+                              i <= totalPages + 3;
+                              i++) {
                             indexPages[index] = i;
                             index++;
                           }
-
+          
                           totalPages = totalPages + 3;
                         }
-
+          
                         setState(() {
                           currentPage++;
                         });
-
+          
                         print(currentPage);
                         await processCharacters();
                       }
                     : null,
                 icon: Icon(Icons.arrow_right,
-                    size: 80, color: HexColor('#D42026')),
+                    size: 65, color: currentPage >= totalItensPages ? Colors.grey : HexColor('#D42026')),
               ),
             ],
           ),
