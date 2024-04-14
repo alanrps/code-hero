@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:code_hero/models/Character.dart';
 import 'package:code_hero/services/marvel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -29,21 +28,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<int> indexPages = [1, 2, 3];
+  int currentPage = 1;
+  int totalPages = 3;
+  int itemsPerPage = 4;
   Services services = Services();
   // List<Widget> _characters = [];
   List<Character> characters = [];
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
 
   Future<Map<String, dynamic>> carregarArquivoJson() async {
     // Carrega o arquivo JSON do diretório de ativos
@@ -56,28 +47,27 @@ class _HomePageState extends State<HomePage> {
     return data;
   }
 
-  processCharacters() async {
-    // {String name = ''} name: name
-    // final charactersResponse = await services.getCharacters();
+  processCharacters({String name = ''}) async {
+    final offset = (currentPage - 1) * 4;
+    final charactersResponse = await services.getCharacters(name: name, offset: offset);
 
-    // final jsonData = jsonDecode(charactersResponse.body);
-    // print('JSON DECODE: $jsonData');
+    setState(() {
+      characters = (charactersResponse['data']['results'] as List)
+          .map((character) => Character.fromJson(character))
+          .toList();
+    });
+
+    // ARQUIVO
+
+    // Map<String, dynamic> jsonData = await carregarArquivoJson();
 
     // setState(() {
     //   characters = (jsonData['data']['results'] as List)
-    //       .map((character) => Character.fromJson(character))
-    //       .toList();
+    //     .map((character) => Character.fromJson(character))
+    //     .toList();
     // });
 
-    Map<String, dynamic> jsonData = await carregarArquivoJson();
-
-    setState(() {
-      characters = (jsonData['data']['results'] as List)
-        .map((character) => Character.fromJson(character))
-        .toList();
-    });
-
-    return characters;
+    // return characters;
   }
 
   getListData(List<Character> characters) {
@@ -100,6 +90,18 @@ class _HomePageState extends State<HomePage> {
     // });
   }
 
+  handleTextChanged(String character) async {
+    await processCharacters(name: character);
+  }
+
+  setPage(int page){
+    setState(() {
+      currentPage = page;
+    });
+
+    print(currentPage);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -109,12 +111,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController _textController = TextEditingController();
-    List<String> _items =
-        List.generate(20, (index) => 'Super Herói ${index + 1}');
-    int _currentPage = 1;
-    int _totalPages = 5;
-    int _itemsPerPage = 4;
 
     return Scaffold(
       appBar: AppBar(
@@ -131,7 +127,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: Text('BUSCA',
                         style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: HexColor('#D42026'))),
                   ),
@@ -139,13 +135,13 @@ class _HomePageState extends State<HomePage> {
                 TextSpan(
                   text: ' MARVEL ',
                   style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: HexColor('#D42026')),
                 ),
                 TextSpan(
                   text: 'TESTE FRONT-END',
-                  style: TextStyle(fontSize: 12, color: HexColor('#D42026')),
+                  style: TextStyle(fontSize: 16, color: HexColor('#D42026')),
                 ),
               ],
             ),
@@ -165,7 +161,8 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: EdgeInsets.fromLTRB(8, 0, 8, 12),
               child: TextField(
-                controller: _textController,
+                onChanged: handleTextChanged,
+                // controller: _textController,
                 decoration: InputDecoration(
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
@@ -201,6 +198,7 @@ class _HomePageState extends State<HomePage> {
               Character character = characters[index];
 
                 return ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(character.thumbnailUrl),
                 ),
@@ -213,27 +211,44 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                onPressed: _currentPage > 1
-                    ? () {
+                onPressed: currentPage > 1
+                    ? () async {
+                        if(currentPage - 1 < indexPages[0]){
+                          int index = 0;
+
+                          for(int i = indexPages[0] - 3; i <= totalPages - 3; i++){
+                            indexPages[index] = i;
+                            index++;
+                          }
+
+                          totalPages = totalPages - 3;
+                        }
+
                         setState(() {
-                          _currentPage--;
+                          currentPage--;
                         });
+
+                        await processCharacters();
                       }
                     : null,
                 icon: Icon(Icons.arrow_left,
-                    size: 80, color: HexColor('#D42026')),
+                    size: 80, color: currentPage > 1 ? HexColor('#D42026') : Colors.grey),
               ),
-              // Text('$_currentPage de $_totalPages'),
+              // Text('$currentPage de $totalPages'),
               Row(
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
                     child: GestureDetector(
-                      // onTap: onPressed,
+                      onTap: () async {
+                        setPage(indexPages[0]);
+                        await processCharacters();
+                      },
                       child: Container(
                         width: 35, // Largura do círculo
                         height: 50, // Altura do círculo
                         decoration: BoxDecoration(
+                          color: indexPages[0] == currentPage ? HexColor('#D42026') : Colors.white, 
                           shape: BoxShape.circle, // Define a forma como círculo
                           border: Border.all(
                             color: HexColor('#D42026'),
@@ -243,11 +258,11 @@ class _HomePageState extends State<HomePage> {
                         padding: EdgeInsets.all(5),
                         child: Center(
                           child: Text(
-                            '1',
+                            indexPages[0].toString(),
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: HexColor('#D42026')),
+                                color: indexPages[0] == currentPage ? Colors.white : HexColor('#D42026')),
                           ),
                         ),
                       ),
@@ -256,11 +271,15 @@ class _HomePageState extends State<HomePage> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
                     child: GestureDetector(
-                      // onTap: onPressed,
+                     onTap: () async {
+                      setPage(indexPages[1]);
+                      await processCharacters();
+                    },
                       child: Container(
                         width: 35, // Largura do círculo
                         height: 50, // Altura do círculo
                         decoration: BoxDecoration(
+                          color: indexPages[1] == currentPage ? HexColor('#D42026') : Colors.white, 
                           shape: BoxShape.circle, // Define a forma como círculo
                           border: Border.all(
                             color: HexColor('#D42026'),
@@ -270,22 +289,26 @@ class _HomePageState extends State<HomePage> {
                         padding: EdgeInsets.all(5),
                         child: Center(
                           child: Text(
-                            '2',
+                            indexPages[1].toString(),
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: HexColor('#D42026')),
+                                color: indexPages[1] == currentPage ? Colors.white : HexColor('#D42026')),
                           ),
                         ),
                       ),
                     ),
                   ),
                   GestureDetector(
-                    // onTap: onPressed,
+                    onTap: () async {
+                      setPage(indexPages[2]);
+                      await processCharacters();
+                    } ,
                     child: Container(
                       width: 35, // Largura do círculo
                       height: 50, // Altura do círculo
                       decoration: BoxDecoration(
+                        color: indexPages[2] == currentPage ? HexColor('#D42026') : Colors.white, 
                         shape: BoxShape.circle, // Define a forma como círculo
                         border: Border.all(
                           color: HexColor('#D42026'),
@@ -295,11 +318,11 @@ class _HomePageState extends State<HomePage> {
                       padding: EdgeInsets.all(5),
                       child: Center(
                         child: Text(
-                          '3',
+                          indexPages[2].toString(),
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: HexColor('#D42026')),
+                              color: indexPages[2] == currentPage ? Colors.white : HexColor('#D42026')),
                         ),
                       ),
                     ),
@@ -307,11 +330,25 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               IconButton(
-                onPressed: _currentPage < _totalPages
-                    ? () {
+                onPressed: currentPage <= totalPages
+                    ? () async {
+                        if(currentPage + 1 > totalPages){
+                          int index = 0;
+
+                          for(int i = totalPages + 1; i <= totalPages + 3; i++){
+                            indexPages[index] = i;
+                            index++;
+                          }
+
+                          totalPages = totalPages + 3;
+                        }
+
                         setState(() {
-                          _currentPage++;
+                          currentPage++;
                         });
+
+                        print(currentPage);
+                        await processCharacters();
                       }
                     : null,
                 icon: Icon(Icons.arrow_right,
