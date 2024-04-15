@@ -1,9 +1,6 @@
 import 'package:code_hero/components/containerCard.dart';
 import 'package:code_hero/models/Character.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 class Details extends StatefulWidget {
   @override

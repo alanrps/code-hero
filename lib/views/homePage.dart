@@ -1,29 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:code_hero/models/Character.dart';
 import 'package:code_hero/services/marvel.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:hexcolor/hexcolor.dart';
-
 import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
 
 class HomePage extends StatefulWidget {
-  // const HomePage({super.key });
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  // final String title;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -39,17 +21,13 @@ class _HomePageState extends State<HomePage> {
   int totalItensPages = 0;
 
   Services services = Services();
-  // List<Widget> _characters = [];
   List<Character> characters = [];
 
   Future<Map<String, dynamic>> carregarArquivoJson() async {
-    // Carrega o arquivo JSON do diretório de ativos
     String jsonString = await rootBundle.loadString('data.json');
 
-    // Converte a string JSON em um mapa ou lista, dependendo do formato do JSON
     var data = jsonDecode(jsonString) as Map<String, dynamic>;
 
-    // Use os dados carregados conforme necessário
     return data;
   }
 
@@ -71,18 +49,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       characters = charactersResult;
     });
-
-    // ARQUIVO
-
-    // Map<String, dynamic> jsonData = await carregarArquivoJson();
-
-    // setState(() {
-    //   characters = (jsonData['data']['results'] as List)
-    //     .map((character) => Character.fromJson(character))
-    //     .toList();
-    // });
-
-    // return characters;
   }
 
   getListData(List<Character> characters) {
@@ -93,20 +59,17 @@ class _HomePageState extends State<HomePage> {
         return ListTile(
             leading: CircleAvatar(
               backgroundImage: NetworkImage(character.thumbnailUrl),
-              // child: Text(character.name),
             ),
             title: Text(character.name));
       }));
     }
 
-    print(widgets);
     // setState(() {
     //   _characters = widgets;
     // });
   }
 
   handleTextChanged(String character) async {
-    // Voltar para 1, resetar os campos e setar o valor total
     setPage(1);
     int index = 0;
     totalPages = 3;
@@ -138,53 +101,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     processCharacters();
-    // .then((characters) => getListData(characters));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Colors.black,
-      //   title: Padding(
-      //     padding: EdgeInsets.fromLTRB(20, 12, 0, 0),
-      //     child: Row(
-      //       crossAxisAlignment: CrossAxisAlignment.end,
-      //       children: [
-      //         Container(
-      //           decoration: BoxDecoration(
-      //             border: Border(
-      //               bottom: BorderSide(width: 0.8, color: HexColor('#D42026')),
-      //             ),
-      //           ),
-      //           child: Text(
-      //             'BUSCA',
-      //             style: TextStyle(
-      //               fontSize: 16,
-      //               fontWeight: FontWeight.bold,
-      //               color: HexColor('#D42026'),
-      //             ),
-      //           ),
-      //         ),
-      //         Text(
-      //           ' MARVEL ',
-      //           style: TextStyle(
-      //             fontSize: 16,
-      //             fontWeight: FontWeight.bold,
-      //             color: HexColor('#D42026'),
-      //           ),
-      //         ),
-      //         Text(
-      //           'TESTE FRONT-END',
-      //           style: TextStyle(
-      //             fontSize: 16,
-      //             color: HexColor('#D42026'),
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      //   ),
-      // ),
       body: SafeArea(
         child: Column(
           children: [
@@ -336,13 +257,13 @@ class _HomePageState extends State<HomePage> {
             ),
             Container(
               // padding: EdgeInsets.fromLTRB(0, 18, 0, 24),
-              height: 80, // Altura do container
+              height: 80, 
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
                     color: HexColor(
-                        '#D42026'), // Define a cor vermelha para a borda inferior
-                    width: 6, // Define a largura da borda
+                        '#D42026'), 
+                    width: 6,
                   ),
                 ),
               ),
@@ -373,7 +294,7 @@ class _HomePageState extends State<HomePage> {
                           }
                         : null,
                     icon: Icon(Icons.arrow_left,
-                        size: 60, // Tamanho do ícone
+                        size: 60, 
                         color: currentPage > 1
                             ? HexColor('#D42026')
                             : Colors.grey),
@@ -416,7 +337,7 @@ class _HomePageState extends State<HomePage> {
                       if(indexPages[1] <= totalItensPages)
                       SizedBox(
                           width:
-                              15), // Adiciona um espaço de 8 pixels entre os botões
+                              15), 
                       if (indexPages[1] <= totalItensPages)
                         GestureDetector(
                           onTap: () async {

@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:crypto/crypto.dart' as crypto;
 
 String publicKey = "c4199fe6da3200a76218ba54a8bb20f6";
 String privateKey = "7fe3040c47248090bd9be6eb54512bfef5571441";
 
-int timestamp = DateTime.now().millisecondsSinceEpoch; // Get current timestamp in milliseconds
+int timestamp = DateTime.now().millisecondsSinceEpoch;
 
 String hashValue = generateMd5Hash(timestamp.toString() + privateKey + publicKey);
 
