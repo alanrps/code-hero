@@ -53,19 +53,19 @@ class _DetailsState extends State<Details> {
                 child: Column(
                   children: [
                     ContainerCard(
-                        title: 'Comics',
+                        title: 'Quadrinhos',
                         value: character.comicsAmount.toString(),
                         icon: icons['Comics'] ?? Icons.error),
                     ContainerCard(
-                        title: 'Stories',
+                        title: 'Histórias',
                         value: character.storiesAmount.toString(),
                         icon: icons['Stories'] ?? Icons.error),
                     ContainerCard(
-                        title: 'Series',
+                        title: 'Séries',
                         value: character.seriesAmount.toString(),
                         icon: icons['Series'] ?? Icons.error),
                     ContainerCard(
-                        title: 'Events',
+                        title: 'Eventos',
                         value: character.eventsAmount.toString(),
                         icon: icons['Events'] ?? Icons.error),
                   ],
